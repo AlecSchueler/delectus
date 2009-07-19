@@ -1,0 +1,13 @@
+This is still very much a work in progress, but a working prototype
+is complete. Something usable should appear here without too much
+delay. If you're interested in the script, then check back soon.
+
+The inspiration for this came after magnolia's database was lost,
+and I worried about what I'd do if anything similar were to happen
+to delicious. Perhaps support for magnolia &c. will be added in 
+the future.
+
+Formats to be supported are:
+    * XBEL
+    * Netscape HTML
+    * Opera ADR
