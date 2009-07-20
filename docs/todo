@@ -1,0 +1,12 @@
+* take command line paramaters for 
+    * username
+    * include private
+        (if true then * password)
+    * count
+    * file to which to write
+    * writeover / append to file
+
+* add support for
+    * xbel
+    * netscape html
+    * opera adr
