@@ -7,6 +7,17 @@
 from urllib import urlopen
 import re
 
+def contents(string, element_name):
+    '''
+    strips out and returns the contents of an xml element.
+    
+    >>> print contents("<p>Hello, World!</p>,"p")
+    Hello, World!
+    '''
+    length = len(element_name)+2 #i.e. `len("<" + elem_name +">" )`
+
+    return string[ length : 0-(length+1) ]
+
 def fetch_rss_url(username, count=0):
     '''
        Returns the url for the feed, filling in the parameters for
@@ -19,13 +30,13 @@ def fetch_rss_url(username, count=0):
         tagScopeCount   = re.compile(r'tagScopeCount">.*?<')
         #The span id containing the overall number of bookmarks    
         users_bookmarks = urlopen('http://delicious.com/%s' % username).read()
-        
+
         count = tagScopeCount.search( users_bookmarks ).group()
         count = count[15:-1] #cut out everything but the number    
-        
+
     return 'http://feeds.delicious.com/v2/rss/%s?count=%s' % (username,count)
 
-def RSS_to_PyDict(feed_url):
+def parse_feed(feed_url):
     '''
         Parse the feed and return it as a dictionary in the form:
             {
@@ -47,24 +58,18 @@ def RSS_to_PyDict(feed_url):
     link        = re.compile(r'<link>.*?</link>'              ,re.DOTALL)
     pubdate     = re.compile(r'<pubdate>.*?</pubdate>'        ,re.DOTALL)
     description = re.compile(r'<description>.*?</description>',re.DOTALL)
-    
+
     items = item.findall( rss )
-    feedPy={}
+    parsed_feed={}
 
     for i in items:
         #todo: instead of having x.search(i).group() called a lot,  
         #have a function which takes x and returns x.search(i).group
         #todo: set link before testing for descriptiong.
         if 'description' in i:
-            feedPy[title.search(i).group()] = (link.search(i).group(),
+            parsed_feed[title.search(i).group()] = (link.search(i).group(),
                                                description.search(i).group())
         else:
-            feedPy[title.search(i).group()] =(link.search(i).group())
+            parsed_feed[title.search(i).group()] =(link.search(i).group())
 
-    #todo create a function which returns only the contents of tags
-    #something like:
-    #def strip(string,tag_name):
-    #   l=len(tag_name)+2
-    #   return string[l:l+1]
-    return feedPy
-
+    return parsed_feed
