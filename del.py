@@ -14,6 +14,7 @@ def contents(string, element_name):
     >>> print contents("<p>Hello, World!</p>,"p")
     Hello, World!
     '''
+    #todo: use this...
     length = len(element_name)+2 #i.e. `len("<" + elem_name +">" )`
 
     return string[ length : 0-(length+1) ]
@@ -65,7 +66,7 @@ def parse_feed(feed_url):
     for i in items:
         #todo: instead of having x.search(i).group() called a lot,  
         #have a function which takes x and returns x.search(i).group
-        #todo: set link before testing for descriptiong.
+        #todo: set link before testing for description.
         if 'description' in i:
             parsed_feed[title.search(i).group()] = (link.search(i).group(),
                                                description.search(i).group())
