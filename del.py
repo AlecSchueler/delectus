@@ -4,9 +4,13 @@
 
 #Script is not in working oder, but may be useful to someone already
 
+#todo: check if user exists
+
 from urllib import urlopen
 import re
 
+
+# - Utility functions
 def contents(string, element_name):
     '''
     strips out and returns the contents of an xml element.
@@ -14,25 +18,33 @@ def contents(string, element_name):
     >>> print contents("<p>Hello, World!</p>,"p")
     Hello, World!
     '''
-    #todo: use this...
     length = len(element_name)+2 #i.e. `len("<" + elem_name +">" )`
 
     return string[ length : 0-(length+1) ]
 
+def sgroup(regex,string):
+    '''
+    Returns only the term matched by a regex.
+    Defined as a function instead of a lambda
+    for the sake of readability.
+    '''
+    return regex.search(string).group()
+
+# - Main functions
 def fetch_rss_url(username, count=0):
     '''
-       Returns the url for the feed, filling in the parameters for
-       username and count. Count is the number of items we ask to
-       be included in the feed. When no value for count is given,
-       we first scrape the users homepage to see their total number
-       of bookmarks, and use that as count.
+    Returns the url for the feed, filling in the parameters for
+    username and count. Count is the number of items we ask to
+    be included in the feed. When no value for count is given,
+    we first scrape the users homepage to see their total number
+    zof bookmarks, and use that as count.
     '''  
     if not count:
         tagScopeCount   = re.compile(r'tagScopeCount">.*?<')
         #The span id containing the overall number of bookmarks    
         users_bookmarks = urlopen('http://delicious.com/%s' % username).read()
 
-        count = tagScopeCount.search( users_bookmarks ).group()
+        count = sgroup(tagScopeCount,users_bookmarks)
         count = count[15:-1] #cut out everything but the number    
 
     return 'http://feeds.delicious.com/v2/rss/%s?count=%s' % (username,count)
@@ -64,13 +76,14 @@ def parse_feed(feed_url):
     parsed_feed={}
 
     for i in items:
-        #todo: instead of having x.search(i).group() called a lot,  
-        #have a function which takes x and returns x.search(i).group
         #todo: set link before testing for description.
         if 'description' in i:
-            parsed_feed[title.search(i).group()] = (link.search(i).group(),
-                                               description.search(i).group())
+            parsed_feed[sgroup(title,i)] =\
+                                    (contents(sgroup(link,i),"link"),
+                                     contents(sgroup(description,i),"contents"))
         else:
-            parsed_feed[title.search(i).group()] =(link.search(i).group())
+            parsed_feed[sgroup(title,i)] = (link.search(i).group())
 
     return parsed_feed
+
+x = parse_feed(fetch_rss_url("SuperlativeHors",10))
