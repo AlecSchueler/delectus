@@ -53,34 +53,39 @@ def parse_feed(feed_url):
     '''
         Parse the feed and return it as a dictionary in the form:
             {
-            title = link,
-                    description, #if applicable
+            title :(link,
+                    pubDate,
+                    description), #if applicable
             title...
             }
     '''
     #todo: it may well be prudent to create a feed class with this 
     #as its __init__ function, so we can call e.g. feed.print_as...
+    #pros: readability                                             
+    #cons: awkward if using the script as a module                 
     rss  = urlopen(feed_url).read()
 
     #todo: replace many <x>.*?</x> with a function that takes x and
     #returns the compiled <x>.*?</x>, with the DOTALL flag.        
 
-    #These are the regecies for the various elements of the feed.
+    #These are the regecies for the various elements of the feed. 
     item        = re.compile(r'<item>.*?</item>'              ,re.DOTALL)
     title       = re.compile(r'<title>.*?</title>'            ,re.DOTALL)
     link        = re.compile(r'<link>.*?</link>'              ,re.DOTALL)
-    pubdate     = re.compile(r'<pubdate>.*?</pubdate>'        ,re.DOTALL)
+    pubDate     = re.compile(r'<pubDate>.*?</pubDate>'        ,re.DOTALL)
     description = re.compile(r'<description>.*?</description>',re.DOTALL)
 
     items = item.findall( rss )
     parsed_feed={}
 
     for i in items:
-        #todo: set link before testing for description.
+        #todo: set link before testing for description.           
+        #todo: test if we already have an item with the same title
         if 'description' in i:
             parsed_feed[sgroup(title,i)] =\
                                     (contents(sgroup(link,i),"link"),
-                                     contents(sgroup(description,i),"contents"))
+                                     contents(sgroup(pubDate,i),"pubDate"),
+                                     contents(sgroup(description,i),"description"))
         else:
             parsed_feed[sgroup(title,i)] = (link.search(i).group())
 
