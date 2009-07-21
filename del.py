@@ -7,10 +7,13 @@
 #todo: check if user exists
 
 from urllib import urlopen
+from time   import mktime
 import re
 
 
 # - Utility functions
+#   Defined as a function instead of lambdas
+#   for the sake of readability.            
 def contents(string, element_name):
     '''
     strips out and returns the contents of an xml element.
@@ -25,12 +28,34 @@ def contents(string, element_name):
 def sgroup(regex,string):
     '''
     Returns only the term matched by a regex.
-    Defined as a function instead of a lambda
-    for the sake of readability.
     '''
     return regex.search(string).group()
 
+months = {"Jan":0,"Feb":1,"Mar":2,
+          "Apr":3,"May":4,"Jun":5,
+          "Jul":6,"Aug":7,"Sep":8,
+          "Oct":9,"Nov":10,"Dec":11}
+def pubDate_to_epoch(pubDate):      #bound to be a better way to do this...
+    '''\
+        Takes the RSS "pubDate" and converts it to epoch seconds.
+    '''
+    global months
+
+    pubDate=pubDate.split(" ")
+    clock  =pubDate[4].split(":")
+    #"Mon, 20 Jul 2009 09:55:01 +0000"
+    parsed = (pubDate[3],
+              months [pubDate[2]],
+              pubDate[1],
+              clock  [0],
+              clock  [1],
+              clock  [2],
+              0,0,-1)
+    return int(mktime(tuple(int(i) for i in parsed))) #todo: beautify this line
+
 # - Main functions
+
+# - init functions for fetching and parsing the feed
 def fetch_rss_url(username, count=0):
     '''
     Returns the url for the feed, filling in the parameters for
@@ -80,30 +105,43 @@ def parse_feed(feed_url):
 
     for i in items:
         #todo:test for desc, set it accordingly, then add everything
-        #todo:test if we already have an item with the same title   ?
+        #todo:test if we already have an item with the same title  ?
+        pub_epoch = pubDate_to_epoch( contents( sgroup(pubDate,i),"pubDate" ) )
         if 'description' in i:
             parsed_feed[sgroup(title,i)] =\
                                     (contents(sgroup(link,i),"link"),
-                                     contents(sgroup(pubDate,i),"pubDate"),
+                                     pub_epoch,
                                      contents(sgroup(description,i),"description"))
         else:
             parsed_feed[sgroup(title,i)] = \
                                     (contents(sgroup(link,i),"link"),
-                                     contents(sgroup(pubDate,i),"pubDate"),
-                                     "")
+                                     pub_epoch,
+                                     "")#no description
 
     return parsed_feed
 
-def convert_html(feed_dict,stdout=1):
+# - conversion functions for outputting the bookmarks with the new filetype
+def convert_html(feed_dict):
+    '''
+        Iterates through the dictionary created with parse_feed(),
+        and prints out a netscape-bookmark-file-1 html file using
+        the values therein.
+    '''
+    print """\
+<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Bookmarks</title>
+<h1>Bookmarks</h1>"""
+    
     for title in iter(feed_dict):
         print """\
     <dt>
-        <a href="%s" last_visit="" add_date="%s" tags="">
-        %s
-        </a>
+        <a href="%s" last_visit="" add_date="%s" tags="">%s</a>
     <dd>%s""" % (feed_dict[title] [0], # url        
-                 feed_dict[title] [1], # pubDate    #todo: convert this to epoch
+                 feed_dict[title] [1], # pubDate    
                  title,                # <-         
                  feed_dict[title] [2]) # description
-        
+        print
+
 #x = convert_html(parse_feed(fetch_rss_url("SuperlativeHors",10)))
+#using the above as a test
