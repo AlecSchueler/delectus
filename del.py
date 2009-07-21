@@ -79,16 +79,31 @@ def parse_feed(feed_url):
     parsed_feed={}
 
     for i in items:
-        #todo: set link before testing for description.           
-        #todo: test if we already have an item with the same title
+        #todo:test for desc, set it accordingly, then add everything
+        #todo:test if we already have an item with the same title   ?
         if 'description' in i:
             parsed_feed[sgroup(title,i)] =\
                                     (contents(sgroup(link,i),"link"),
                                      contents(sgroup(pubDate,i),"pubDate"),
                                      contents(sgroup(description,i),"description"))
         else:
-            parsed_feed[sgroup(title,i)] = (link.search(i).group())
+            parsed_feed[sgroup(title,i)] = \
+                                    (contents(sgroup(link,i),"link"),
+                                     contents(sgroup(pubDate,i),"pubDate"),
+                                     "")
 
     return parsed_feed
 
-x = parse_feed(fetch_rss_url("SuperlativeHors",10))
+def convert_html(feed_dict,stdout=1):
+    for title in iter(feed_dict):
+        print """\
+    <dt>
+        <a href="%s" last_visit="" add_date="%s" tags="">
+        %s
+        </a>
+    <dd>%s""" % (feed_dict[title] [0], # url        
+                 feed_dict[title] [1], # pubDate    #todo: convert this to epoch
+                 title,                # <-         
+                 feed_dict[title] [2]) # description
+        
+#x = convert_html(parse_feed(fetch_rss_url("SuperlativeHors",10)))
