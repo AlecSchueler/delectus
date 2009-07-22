@@ -19,7 +19,8 @@ import re
 def contents(string, element_name):
     '''
     strips out and returns the contents of an xml element.
-    
+    note: presumes no attributes are given
+
     >>> print contents("<p>Hello, World!</p>,"p")
     Hello, World!
     '''
@@ -61,8 +62,13 @@ def re_compile(element_name):
     it and its contents.
     '''
     return re.compile('<%s>.*?</%s>' % (element_name,element_name), re.DOTALL)
-# - Main functions
 
+def tag_strip(category_string):
+    global username
+    return category_string[42+len(username):-11]
+
+
+# - Main functions
 # - init functions for fetching and parsing the feed
 def fetch_rss_url(username, count=0):
     '''
@@ -101,9 +107,10 @@ def parse_feed(feed_url):
     #These are the regecies for the various elements of the feed. 
     item        = re_compile("item")
     title       = re_compile("title")
-    link        = re.compile("link")
-    pubDate     = re.compile("pubDate")
-    description = re.compile("description")
+    link        = re_compile("link")
+    pubDate     = re_compile("pubDate")
+    description = re_compile("description")
+    category    = re.compile('<category.*?>.*?</category>')
 
     items = item.findall( rss )
     parsed_feed={}
@@ -112,16 +119,28 @@ def parse_feed(feed_url):
         #todo:test for desc, set it accordingly, then add everything
         #todo:test if we already have an item with the same title   
         pub_epoch = pubDate_to_epoch( contents( sgroup(pubDate,i),"pubDate" ) )
+
         if 'description' in i:
-            parsed_feed[sgroup(title,i)] =\
-                                    (contents(sgroup(link,i),"link"),
-                                     pub_epoch,
-                                     contents(sgroup(description,i),"description"))
+            parsed_feed[ contents( sgroup( title,i),"title")] =\
+                                         (contents(sgroup(link,i),"link"),
+
+                                          pub_epoch,
+
+                                          contents(sgroup(description,i),
+                                                   "description"),
+
+                                          tuple(tag_strip(c)
+                                                for c in category.findall(i)))
         else:
-            parsed_feed[sgroup(title,i)] = \
-                                    (contents(sgroup(link,i),"link"),
-                                     pub_epoch,
-                                     "")#no description
+            parsed_feed[ contents( sgroup( title,i),"title")] =\
+                                         (contents(sgroup(link,i),"link"),
+
+                                          pub_epoch,
+
+                                          "",#no description
+
+                                          tuple(tag_strip(c)
+                                                for c in category.findall(i)))
 
     return parsed_feed
 
@@ -141,16 +160,23 @@ def convert_html(feed_dict):
 <dt><h3 add_date="%s" last_modified="%s">Delicious Bookmarks</h3>\
 """ %(int(time()),
       int(time()))
-                                                                           
+
     for title in iter(feed_dict):
         print """\
     <dt>
-        <a href="%s" last_visit="" add_date="%s" tags="">%s</a>
+        <a href="%s" last_visit="" add_date="%s" tags="%s">%s</a>
     <dd>%s""" % (feed_dict[title] [0], # url        
                  feed_dict[title] [1], # pubDate    
+        ",".join(feed_dict[title] [3]),# tags
                  title,                # <-         
                  feed_dict[title] [2]) # description
         print
 
-x = convert_html(parse_feed(fetch_rss_url("SuperlativeHors",10)))
+
 #using the above as a test
+
+
+
+if __name__ == "__main__":
+    username = "SuperlativeHors" # test
+    x = convert_html(parse_feed(fetch_rss_url("SuperlativeHors",10)))
