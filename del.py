@@ -4,10 +4,12 @@
 
 #Script is not in working oder, but may be useful to someone already
 
-#todo: check if user exists
-
+#todo:  check if user exists
+#       print out to file   
+#       commandline options 
+#       tag support         
 from urllib import urlopen
-from time   import mktime
+from time   import mktime, time
 import re
 
 
@@ -51,8 +53,14 @@ def pubDate_to_epoch(pubDate):      #bound to be a better way to do this...
               clock  [1],
               clock  [2],
               0,0,-1)
-    return int(mktime(tuple(int(i) for i in parsed))) #todo: beautify this line
+    return int(mktime(tuple(int(i) for i in parsed))) #todo: delispify this line
 
+def re_compile(element_name):
+    '''
+    Takes the name of an xml element and returns a compiled regex object to match
+    it and its contents.
+    '''
+    return re.compile('<%s>.*?</%s>' % (element_name,element_name), re.DOTALL)
 # - Main functions
 
 # - init functions for fetching and parsing the feed
@@ -90,22 +98,19 @@ def parse_feed(feed_url):
     #cons: awkward if using the script as a module                 
     rss  = urlopen(feed_url).read()
 
-    #todo: replace many <x>.*?</x> with a function that takes x and
-    #returns the compiled <x>.*?</x>, with the DOTALL flag.        
-
     #These are the regecies for the various elements of the feed. 
-    item        = re.compile(r'<item>.*?</item>'              ,re.DOTALL)
-    title       = re.compile(r'<title>.*?</title>'            ,re.DOTALL)
-    link        = re.compile(r'<link>.*?</link>'              ,re.DOTALL)
-    pubDate     = re.compile(r'<pubDate>.*?</pubDate>'        ,re.DOTALL)
-    description = re.compile(r'<description>.*?</description>',re.DOTALL)
+    item        = re_compile("item")
+    title       = re_compile("title")
+    link        = re.compile("link")
+    pubDate     = re.compile("pubDate")
+    description = re.compile("description")
 
     items = item.findall( rss )
     parsed_feed={}
 
     for i in items:
         #todo:test for desc, set it accordingly, then add everything
-        #todo:test if we already have an item with the same title  ?
+        #todo:test if we already have an item with the same title   
         pub_epoch = pubDate_to_epoch( contents( sgroup(pubDate,i),"pubDate" ) )
         if 'description' in i:
             parsed_feed[sgroup(title,i)] =\
@@ -131,8 +136,12 @@ def convert_html(feed_dict):
 <!DOCTYPE NETSCAPE-Bookmark-file-1>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Bookmarks</title>
-<h1>Bookmarks</h1>"""
-    
+<h1>Bookmarks</h1>
+
+<dt><h3 add_date="%s" last_modified="%s">Delicious Bookmarks</h3>\
+""" %(int(time()),
+      int(time()))
+                                                                           
     for title in iter(feed_dict):
         print """\
     <dt>
@@ -143,5 +152,5 @@ def convert_html(feed_dict):
                  feed_dict[title] [2]) # description
         print
 
-#x = convert_html(parse_feed(fetch_rss_url("SuperlativeHors",10)))
+x = convert_html(parse_feed(fetch_rss_url("SuperlativeHors",10)))
 #using the above as a test
