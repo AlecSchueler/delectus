@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 '''Backup delicious.com bookmarks in a variety of formats.'''
 
@@ -11,6 +12,7 @@
 from urllib import urlopen
 from time   import mktime, time
 import re
+import sys
 
 
 # - Utility functions
@@ -58,8 +60,8 @@ def pubDate_to_epoch(pubDate):      #bound to be a better way to do this...
 
 def re_compile(element_name):
     '''
-    Takes the name of an xml element and returns a compiled regex object to match
-    it and its contents.
+    Takes the name of an xml element and returns a compiled regex
+    object to match it and its contents.
     '''
     return re.compile('<%s>.*?</%s>' % (element_name,element_name), re.DOTALL)
 
@@ -78,7 +80,7 @@ def fetch_rss_url(username, count=0):
     we first scrape the users homepage to see their total number
     zof bookmarks, and use that as count.
     '''  
-    if not count:
+    if not count:#get all if options.COUNT set to 0
         tagScopeCount   = re.compile(r'tagScopeCount">.*?<')
         #The span id containing the overall number of bookmarks    
         users_bookmarks = urlopen('http://delicious.com/%s' % username).read()
@@ -173,7 +175,7 @@ def convert_html(feed_dict):
                  feed_dict[title] [2]) # description
         print
 
-def convert_adr(feed_dict):
+def convert_adr(feed_dict):#todo: docstring
     print """\
 Opera Hotlist version 2.0
 Options: encoding = utf8, version=3
@@ -192,7 +194,7 @@ Options: encoding = utf8, version=3
                          feed_dict[title] [1],# pubDate
                          feed_dict[title] [2])# description
 
-def convert_xbel(feed_dict):
+def convert_xbel(feed_dict):#todo: docstring
     print """\
 <?xml version="1.0"?>
 <!DOCTYPE xbel
@@ -223,5 +225,50 @@ def convert_xbel(feed_dict):
     print "\t</folder>\n</xbel>"
 
 if __name__ == "__main__":
-    username = "SuperlativeHors" # test
-    x = convert_xbel(parse_feed(fetch_rss_url("SuperlativeHors",10)))
+    from optparse import OptionParser,OptionValueError
+
+    oparser = OptionParser(usage="usage: %prog [options]")
+    oparser.add_option("-u","--user",dest="USER",
+                       action="store",type="str",
+                       help="Delicious username")# should be a positional arg
+    oparser.add_option("-f","--file",dest="OUT",default="sys.sdtout",
+                       action="store",type="str",
+                       help="File to write to. Default is stdout")
+    oparser.add_option("-c","--count",dest="COUNT",
+                       action="store",type="int",default=0,
+                       help="""Number bookmarks to retrieve.
+                                0 means all (default)""")
+    #Note: above is inoperational
+    oparser.add_option("-a","--adr",dest="ADR",
+                       action="store_true",default=False,
+                       help="Whether to use Opera's ADR format")
+    oparser.add_option("-n","--html",dest="HTM",
+                       action="store_true",default=False,
+                       help="Whether to use Netscape's HTML format")
+    oparser.add_option("-x","--xbel",dest="XBEL",
+                       action="store_true",default=True,
+                       help="Whether to use the PXSIG's XBEL format (default)")
+    #todo: add a resolve case for filetypes
+
+    (options, args) = oparser.parse_args()
+
+    if not options.USER:
+        print "No username given. Use --help for usage"
+        exit(1)
+    else:
+        username=options.USER
+
+    rss_url = fetch_rss_url(username,options.COUNT)
+    feed    = parse_feed(rss_url)
+
+    if options.HTM:
+        convert_html(feed)
+        exit(0)
+
+    elif options.ADR:
+        convert_adr(feed)
+        exit(0)
+
+    elif options.XBEL:
+        convert_xbel(feed)
+        exit(0)
