@@ -4,10 +4,10 @@
 
 #Script is not in working oder, but may be useful to someone already
 
-#todo:  check if user exists
-#       print out to file   
-#       commandline options 
-#       tag support         
+#todo:  check if user exists    
+#       print out to file       
+#       commandline options     
+#       private bookmark support
 from urllib import urlopen
 from time   import mktime, time
 import re
@@ -118,6 +118,7 @@ def parse_feed(feed_url):
     for i in items:
         #todo:test for desc, set it accordingly, then add everything
         #todo:test if we already have an item with the same title   
+        #todo:merge contents ans sgroup into a single function      
         pub_epoch = pubDate_to_epoch( contents( sgroup(pubDate,i),"pubDate" ) )
 
         if 'description' in i:
@@ -191,6 +192,36 @@ Options: encoding = utf8, version=3
                          feed_dict[title] [1],# pubDate
                          feed_dict[title] [2])# description
 
+def convert_xbel(feed_dict):
+    print """\
+<?xml version="1.0"?>
+<!DOCTYPE xbel
+  PUBLIC "+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML"
+         "http://www.python.org/topics/xml/dtds/xbel-1.0.dtd">
+<xbel version="1.0">
+    <info>This XBEL document was generated automatically using a conversion
+          script for delicious.com  bookmarks.  For more information please
+          visit http://github.com/AlecSchueler/Delectus/
+    </info>
+
+    <folder folded="yes">
+        <title>Delicious Bookmarks</title>"""
+
+    for title in iter(feed_dict):
+        print """
+            <bookmark href="%s">
+                <title>%s</title>
+                <info>Tags: %s</info>
+                <desc>
+                    %s
+                </desc>
+            </bookmark>""" % (feed_dict[title][0], #url
+                              title,
+                     ",".join(feed_dict[title][3]),
+                              feed_dict[title][2])
+        print
+    print "\t</folder>\n</xbel>"
+
 if __name__ == "__main__":
     username = "SuperlativeHors" # test
-    x = convert_adr(parse_feed(fetch_rss_url("SuperlativeHors",10)))
+    x = convert_xbel(parse_feed(fetch_rss_url("SuperlativeHors",10)))
