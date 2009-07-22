@@ -167,16 +167,30 @@ def convert_html(feed_dict):
         <a href="%s" last_visit="" add_date="%s" tags="%s">%s</a>
     <dd>%s""" % (feed_dict[title] [0], # url        
                  feed_dict[title] [1], # pubDate    
-        ",".join(feed_dict[title] [3]),# tags
+        ",".join(feed_dict[title] [3]),# tags       
                  title,                # <-         
                  feed_dict[title] [2]) # description
         print
 
+def convert_adr(feed_dict):
+    print """\
+Opera Hotlist version 2.0
+Options: encoding = utf8, version=3
 
-#using the above as a test
+#FOLDER
+    NAME=Delicious Bookmarks"""
 
-
+    for title in iter(feed_dict):
+        print """
+#URL
+    NAME=%s
+    URL=%s
+    CREATED=%s
+    DESCRIPTION=%s""" % (title,               # <-     
+                         feed_dict[title] [0],# ur     
+                         feed_dict[title] [1],# pubDate
+                         feed_dict[title] [2])# description
 
 if __name__ == "__main__":
     username = "SuperlativeHors" # test
-    x = convert_html(parse_feed(fetch_rss_url("SuperlativeHors",10)))
+    x = convert_adr(parse_feed(fetch_rss_url("SuperlativeHors",10)))
