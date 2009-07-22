@@ -1,0 +1,14 @@
+The following browsers have been tested with Delectus and are known to work:
+
+Midori (0.1.7 Arch Linux package)
+    -Didn't support bookmark importing, but replacing the
+    ~/.midori/bookmarks.xbel file with the generated file
+    worked perfectly. Drawback  is  that  any  pre-extant
+    bookmarks are lost.
+
+Opera (9.64 qtstatic for Linux)
+    -Worked perfectly with the generated .adr file
+
+Firefox (3.5.1 Arch Linux package)
+    -Other than tagging not yet being supported on import
+    /export, everything worked perfectly.
