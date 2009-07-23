@@ -5,10 +5,9 @@
 
 #Script is not in working oder, but may be useful to someone already
 
-#todo:  check if user exists    
-#       print out to file       
-#       commandline options     
-#       private bookmark support
+#todo:  check if user exists                     
+#       private bookmark support                 
+#       warn that tags are lost with adr and xbel
 from urllib import urlopen
 from time   import mktime, time
 import re
@@ -185,7 +184,12 @@ def convert_html(feed_dict):
                  feed_dict[title] [2]) # description
         print
 
-def convert_adr(feed_dict):#todo: docstring
+def convert_adr(feed_dict):
+    '''
+        Iterates through the dictionary created wit parse_feed(),
+        and prints out an Opera ADR bookmark file, version 3, using
+        the values therein.
+    '''
     print """\
 Opera Hotlist version 2.0
 Options: encoding = utf8, version=3
@@ -204,7 +208,13 @@ Options: encoding = utf8, version=3
                          feed_dict[title] [1],# pubDate
                          feed_dict[title] [2])# description
 
-def convert_xbel(feed_dict):#todo: docstring
+def convert_xbel(feed_dict):
+    '''
+        Iterates through the dictionary created wit parse_feed(),
+        and prints out an XBEL file, version 1.0, as defined by
+        the Python XML Special Interest Group, using the values
+        therein.
+    '''
     print """\
 <?xml version="1.0"?>
 <!DOCTYPE xbel
@@ -241,14 +251,13 @@ if __name__ == "__main__":
     oparser.add_option("-u","--user",dest="USER",
                        action="store",type="str",
                        help="Delicious username")# should be a positional arg
-    oparser.add_option("-f","--file",dest="OUT",default="sys.sdtout",
+    oparser.add_option("-f","--file",dest="FILE",default="sys.sdtout",
                        action="store",type="str",
                        help="File to write to. Default is stdout")
     oparser.add_option("-c","--count",dest="COUNT",
                        action="store",type="int",default=0,
-                       help="""Number bookmarks to retrieve.
+                       help="""Number of bookmarks to retrieve
                                 0 means all (default)""")
-    #Note: above is inoperational
     oparser.add_option("-a","--adr",dest="ADR",
                        action="store_true",default=False,
                        help="Whether to use Opera's ADR format")
@@ -271,7 +280,7 @@ if __name__ == "__main__":
     rss_url = fetch_rss_url(username,options.COUNT)
     feed    = parse_feed(rss_url)
 
-    toggler = file(options.OUT,"w")
+    toggler = file(options.FILE,"w")
     Stdout  = sys.stdout
     toggle_stdout()
 
