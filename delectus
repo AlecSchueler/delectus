@@ -251,7 +251,7 @@ if __name__ == "__main__":
     oparser.add_option("-u","--user",dest="USER",
                        action="store",type="str",
                        help="Delicious username")# should be a positional arg
-    oparser.add_option("-f","--file",dest="FILE",default="sys.sdtout",
+    oparser.add_option("-f","--file",dest="FILE",default=None,
                        action="store",type="str",
                        help="File to write to. Default is stdout")
     oparser.add_option("-c","--count",dest="COUNT",
@@ -280,9 +280,10 @@ if __name__ == "__main__":
     rss_url = fetch_rss_url(username,options.COUNT)
     feed    = parse_feed(rss_url)
 
-    toggler = file(options.FILE,"w")
-    Stdout  = sys.stdout
-    toggle_stdout()
+    if options.FILE !=None:
+        toggler = file(options.FILE,"w")
+        Stdout  = sys.stdout
+        toggle_stdout()
 
     #todo: use a switch here
     if options.HTM:
@@ -294,5 +295,6 @@ if __name__ == "__main__":
     elif options.XBEL:
         convert_xbel(feed)
 
-    toggle_stdout()
+    if options.FILE !=None:
+        toggle_stdout()
     exit(0)
