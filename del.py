@@ -69,6 +69,16 @@ def tag_strip(category_string):
     global username
     return category_string[42+len(username):-11]
 
+def toggle_stdout():
+    '''
+    Toggles sys.stdout between the default and the file given to
+    write to.
+    '''
+    global toggler,Stdout
+    if sys.stdout == toggler:
+        sys.stdout=Stdout
+    else:
+        sys.stdout=toggler
 
 # - Main functions
 # - init functions for fetching and parsing the feed
@@ -261,14 +271,19 @@ if __name__ == "__main__":
     rss_url = fetch_rss_url(username,options.COUNT)
     feed    = parse_feed(rss_url)
 
+    toggler = file(options.OUT,"w")
+    Stdout  = sys.stdout
+    toggle_stdout()
+
+    #todo: use a switch here
     if options.HTM:
         convert_html(feed)
-        exit(0)
 
     elif options.ADR:
         convert_adr(feed)
-        exit(0)
 
     elif options.XBEL:
         convert_xbel(feed)
-        exit(0)
+
+    toggle_stdout()
+    exit(0)
