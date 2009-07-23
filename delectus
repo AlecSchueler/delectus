@@ -68,17 +68,6 @@ def tag_strip(category_string):
     global username
     return category_string[42+len(username):-11]
 
-def toggle_stdout():
-    '''
-    Toggles sys.stdout between the default and the file given to
-    write to.
-    '''
-    global toggler,Stdout
-    if sys.stdout == toggler:
-        sys.stdout=Stdout
-    else:
-        sys.stdout=toggler
-
 # - Main functions
 # - init functions for fetching and parsing the feed
 def fetch_rss_url(username, count=0):
@@ -163,26 +152,29 @@ def convert_html(feed_dict):
         and prints out a netscape-bookmark-file-1 html file using
         the values therein.
     '''
-    print """\
+    global target
+    target.write("""\
 <!DOCTYPE NETSCAPE-Bookmark-file-1>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Bookmarks</title>
 <h1>Bookmarks</h1>
 
-<dt><h3 add_date="%s" last_modified="%s">Delicious Bookmarks</h3>\
+<dt><h3 add_date="%s" last_modified="%s">Delicious Bookmarks</h3>
 """ %(int(time()),
       int(time()))
+    )
 
     for title in iter(feed_dict):
-        print """\
+        target.write("""
     <dt>
         <a href="%s" last_visit="" add_date="%s" tags="%s">%s</a>
-    <dd>%s""" % (feed_dict[title] [0], # url        
+    <dd>%s\n"""%(feed_dict[title] [0], # url        
                  feed_dict[title] [1], # pubDate    
         ",".join(feed_dict[title] [3]),# tags       
                  title,                # <-         
                  feed_dict[title] [2]) # description
-        print
+                    )
+
 
 def convert_adr(feed_dict):
     '''
@@ -190,23 +182,25 @@ def convert_adr(feed_dict):
         and prints out an Opera ADR bookmark file, version 3, using
         the values therein.
     '''
-    print """\
+    global target
+    target.write("""\
 Opera Hotlist version 2.0
 Options: encoding = utf8, version=3
 
 #FOLDER
-    NAME=Delicious Bookmarks"""
+    NAME=Delicious Bookmarks""")
 
     for title in iter(feed_dict):
-        print """
+        target.write("""
 #URL
     NAME=%s
     URL=%s
     CREATED=%s
-    DESCRIPTION=%s""" % (title,               # <-     
+    DESCRIPTION=%s\n"""% (title,              # <-     
                          feed_dict[title] [0],# ur     
                          feed_dict[title] [1],# pubDate
                          feed_dict[title] [2])# description
+                    )
 
 def convert_xbel(feed_dict):
     '''
@@ -215,7 +209,8 @@ def convert_xbel(feed_dict):
         the Python XML Special Interest Group, using the values
         therein.
     '''
-    print """\
+    global target
+    target.write("""\
 <?xml version="1.0"?>
 <!DOCTYPE xbel
   PUBLIC "+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML"
@@ -227,31 +222,31 @@ def convert_xbel(feed_dict):
     </info>
 
     <folder folded="yes">
-        <title>Delicious Bookmarks</title>"""
+        <title>Delicious Bookmarks</title>""")
 
     for title in iter(feed_dict):
-        print """
+        target.write("""
             <bookmark href="%s">
                 <title>%s</title>
                 <info>Tags: %s</info>
                 <desc>
                     %s
                 </desc>
-            </bookmark>""" % (feed_dict[title][0], #url
+            </bookmark>""" % (feed_dict[title][0],
                               title,
                      ",".join(feed_dict[title][3]),
                               feed_dict[title][2])
-        print
-    print "\t</folder>\n</xbel>"
+                     )
+    target.write("\t</folder>\n</xbel>\n")
 
 if __name__ == "__main__":
     from optparse import OptionParser,OptionValueError
 
-    oparser = OptionParser(usage="usage: %prog [options]")
+    oparser = OptionParser(usage="usage: delectus -u USERNAME [options]")
     oparser.add_option("-u","--user",dest="USER",
                        action="store",type="str",
                        help="Delicious username")# should be a positional arg
-    oparser.add_option("-f","--file",dest="FILE",default=None,
+    oparser.add_option("-f","--file",dest="FILE",default=sys.stdout,
                        action="store",type="str",
                        help="File to write to. Default is stdout")
     oparser.add_option("-c","--count",dest="COUNT",
@@ -272,7 +267,7 @@ if __name__ == "__main__":
     (options, args) = oparser.parse_args()
 
     if not options.USER:
-        print "No username given. Use --help for usage"
+        print "usage: delectus -u USERNAME [options]"
         exit(1)
     else:
         username=options.USER
@@ -280,10 +275,12 @@ if __name__ == "__main__":
     rss_url = fetch_rss_url(username,options.COUNT)
     feed    = parse_feed(rss_url)
 
-    if options.FILE !=None:
-        toggler = file(options.FILE,"w")
-        Stdout  = sys.stdout
-        toggle_stdout()
+    if options.FILE !=sys.stdout:
+        target = file(options.FILE,"w")
+        close=1#whether or not to close the file before exit
+    else:
+        target=sys.stdout
+        close=0
 
     #todo: use a switch here
     if options.HTM:
@@ -295,6 +292,5 @@ if __name__ == "__main__":
     elif options.XBEL:
         convert_xbel(feed)
 
-    if options.FILE !=None:
-        toggle_stdout()
+    if close:target.close()
     exit(0)

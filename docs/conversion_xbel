@@ -39,5 +39,3 @@ Date/time value which records the time of the last known change to the resource 
 
 visited 
 Date/time value which represents the time of the user's last ``visit'' to the resource. Note that the value for modified may be more recent than the value for visited if software is used that checks for resources which have changed since the user last visited the resource. This feature is increasingly common in browsers.
-
-
