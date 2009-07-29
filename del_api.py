@@ -4,6 +4,17 @@ import urllib
 import re
 import sys
 
+
+def api_url(username,password,count=0):
+    if not count:
+        return "https://%s:%s@api.del.icio.us/v1/posts/all"%(
+            username,password)
+    return "https://%s:%s@api.del.icio.us/v1/posts/get?count=%s"%(
+        username,password,count)
+
+def get_xml(url):
+    return urllib.urlopen(url).read()
+
 def sgroup(regex,string):
     '''
     Returns only the term matched by a regex.
@@ -167,14 +178,16 @@ if __name__ == "__main__":
 
     (options, args) = oparser.parse_args()
 
-    if not options.USER:
-        print "usage: delectus -u USERNAME [options]"
+    if not options.USER or not options.PASS:
+        print "usage: delectus -u USERNAME -p PASSWORD [options]"
         exit(1)
     else:
         username=options.USER
+        password=options.PASS
 
-    rss_url = fetch_rss_url(username,options.COUNT)
-    feed    = parse_feed(rss_url)
+    url = api_url(username,password,options.COUNT)
+    
+    feed    = parse_feed(rss_url)#######
 
     if options.FILE !=sys.stdout:
         target = file(options.FILE,"w")
@@ -196,4 +209,6 @@ if __name__ == "__main__":
     if close:target.close()
     exit(0)
 
+    
+    
 
