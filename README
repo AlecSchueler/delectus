@@ -34,3 +34,8 @@ modules:
 
 Note that all of the above are contained in the CPython
 standard library.
+
+Note:
+    del_api.py is an incomplete reworking of delectus 
+designed to better use the Delicious API. Until it is
+complete you should use "delectus" instead.
