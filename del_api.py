@@ -1,5 +1,6 @@
 #!/usr/bi/env python
 #todo: use a global "usage..." var
+#todo: srt useragent string
 from time import mktime, time
 import urllib
 import re
