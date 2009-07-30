@@ -1,9 +1,9 @@
 #!/usr/bi/env python
+#todo: use a global "usage..." var
 from time import mktime, time
 import urllib
 import re
 import sys
-
 
 def api_url(username,password,count=0):
     if not count:
@@ -48,7 +48,7 @@ def parse_posts(xml):
     
     parsed = {}
 
-    #todo: order
+    #todo: tidy this up
     for p in post.findall(xml):
         parsed[parse_attr("description",sgroup(title,p))]=(
             parse_attr("href", sgroup( href,p)),
@@ -151,13 +151,30 @@ def convert_xbel(feed_dict):
                      )
     target.write("\t</folder>\n</xbel>\n")
 
+def convert(parsed_xml):
+    global options
+    if options.HTM:
+        convert_html(parsed_xml)
+
+    elif options.ADR:
+        convert_adr(parsed_xml)
+
+    elif options.XBEL:
+        convert_xbel(parsed_xml)
+
 if __name__ == "__main__":
     from optparse import OptionParser,OptionValueError
+    import getpass
 
-    oparser = OptionParser(usage="usage: delectus -u USERNAME [options]")
+    oparser = OptionParser(usage=
+                          "usage: delectus -u USERNAME [-p PASSWORD] [options]")
+
     oparser.add_option("-u","--user",dest="USER",
                        action="store",type="str",
                        help="Delicious username")# should be a positional arg
+    oparser.add_option("-p","--pass",dest="PASS",
+                       action="store",type="str",
+                       help="Delicious password (not reccomended - see man)")
     oparser.add_option("-f","--file",dest="FILE",default=sys.stdout,
                        action="store",type="str",
                        help="File to write to. Default is stdout")
@@ -178,16 +195,16 @@ if __name__ == "__main__":
 
     (options, args) = oparser.parse_args()
 
-    if not options.USER or not options.PASS:
-        print "usage: delectus -u USERNAME -p PASSWORD [options]"
+    if not options.USER:
+        print "usage: delectus -u USERNAME [-p PASSWORD] [options]"
         exit(1)
     else:
         username=options.USER
-        password=options.PASS
+    if not options.PASS:
+        password=getpass.getpass()
 
     url = api_url(username,password,options.COUNT)
-    
-    feed    = parse_feed(rss_url)#######
+    xml = get_xml(url)
 
     if options.FILE !=sys.stdout:
         target = file(options.FILE,"w")
@@ -196,19 +213,9 @@ if __name__ == "__main__":
         target=sys.stdout
         close=0
 
-    #todo: use a switch here
-    if options.HTM:
-        convert_html(feed)
-
-    elif options.ADR:
-        convert_adr(feed)
-
-    elif options.XBEL:
-        convert_xbel(feed)
-
-    if close:target.close()
+    if close:
+        try:convert(parse_posts(xml))
+        finally:target.close()
+    else:
+        convert(parse_posts(xml))
     exit(0)
-
-    
-    
-
