@@ -1,20 +1,41 @@
 #!/usr/bi/env python
 #todo: use a global "usage..." var
-#todo: srt useragent string
+#todo: docstrings
+#todo: set useragent string
 from time import mktime, time
+from os import popen
 import urllib
 import re
 import sys
+
+class urlopener(urllib.URLopener):
+    try:
+        arch = popen("uname -m") # system architecture
+        kern = popen("uname -s") # kernel name
+        version = "Delectus/1.0 (%s; %s; N)" %\
+                  (kern.read().strip("\n"),  arch.read().strip("\n"))
+    finally:
+        arch.close()
+        kern.close()
+
 
 def api_url(username,password,count=0):
     if not count:
         return "https://%s:%s@api.del.icio.us/v1/posts/all"%(
             username,password)
-    return "https://%s:%s@api.del.icio.us/v1/posts/get?count=%s"%(
+    return "https://%s:%s@api.del.icio.us/v1/posts/recent?count=%s"%(
         username,password,count)
 
+
 def get_xml(url):
-    return urllib.urlopen(url).read()
+    global del_opener
+    try:
+        xml_sock = del_opener.open(url)
+        xml      = xml_sock.read()
+    finally:
+        xml_sock.close()
+        return xml
+
 
 def sgroup(regex,string):
     '''
@@ -22,11 +43,13 @@ def sgroup(regex,string):
     '''
     return regex.search(string).group()
 
+
 def parse_attr(attr_name,string):
     start= len(attr_name)+2 # id est 'attr_nam="'
     stop = -1
     
     return string[start:stop]
+
 
 def api_time_to_epoch(time):
     #2009-06-19T17:28:55Z
@@ -38,6 +61,7 @@ def api_time_to_epoch(time):
               time[-3:-1],
               0,0,-1)
     return int(mktime(tuple(int(i) for i in parsed)))
+
 
 def parse_posts(xml):
     post  = re.compile("<post .*?>\\n")
@@ -58,6 +82,7 @@ def parse_posts(xml):
             tuple(parse_attr("tag", sgroup( tags,p)).split(' '))
         )
     return parsed
+
 
 def convert_html(feed_dict):
     '''
@@ -115,6 +140,7 @@ Options: encoding = utf8, version=3
                          feed_dict[title] [2])# description
                     )
 
+
 def convert_xbel(feed_dict):
     '''
         Iterates through the dictionary created wit parse_feed(),
@@ -152,6 +178,7 @@ def convert_xbel(feed_dict):
                      )
     target.write("\t</folder>\n</xbel>\n")
 
+
 def convert(parsed_xml):
     global options
     if options.HTM:
@@ -163,19 +190,20 @@ def convert(parsed_xml):
     elif options.XBEL:
         convert_xbel(parsed_xml)
 
+
 if __name__ == "__main__":
     from optparse import OptionParser,OptionValueError
     import getpass
+    del_opener = urlopener()
+    Usage = "usage: delectus -u USERNAME [options]"
 
-    oparser = OptionParser(usage=
-                          "usage: delectus -u USERNAME [-p PASSWORD] [options]")
+    oparser = OptionParser(usage=Usage)
 
-    oparser.add_option("-u","--user",dest="USER",
+    oparser.add_option("-u","--user",dest="USER",# should be a positional arg
                        action="store",type="str",
-                       help="Delicious username")# should be a positional arg
-    oparser.add_option("-p","--pass",dest="PASS",
-                       action="store",type="str",
-                       help="Delicious password (not reccomended - see man)")
+                       help="Delicious username")
+    oparser.add_option("-p","--pass",dest="PASS",#<- for use in scripts
+                       action="store",type="str")
     oparser.add_option("-f","--file",dest="FILE",default=sys.stdout,
                        action="store",type="str",
                        help="File to write to. Default is stdout")
@@ -197,7 +225,7 @@ if __name__ == "__main__":
     (options, args) = oparser.parse_args()
 
     if not options.USER:
-        print "usage: delectus -u USERNAME [-p PASSWORD] [options]"
+        print Usage
         exit(1)
     else:
         username=options.USER
