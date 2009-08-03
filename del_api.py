@@ -1,7 +1,8 @@
 #!/usr/bi/env python
 #todo: use a global "usage..." var
 #todo: docstrings
-#todo: set useragent string
+#todo: retrieve by tag
+#todo: set folder name in opts
 from time import mktime, time
 from os import popen
 import urllib
