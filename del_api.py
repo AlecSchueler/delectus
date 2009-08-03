@@ -10,6 +10,12 @@ import re
 import sys
 
 class urlopener(urllib.URLopener):
+    '''
+    Sets user-agent string to:
+        "Delectus/$version ($kernel-name; $architecture; N)"
+    e.g.:
+        "Delectus/1.0 (Linux; i686; N)"
+    '''
     try:
         arch = popen("uname -m") # system architecture
         kern = popen("uname -s") # kernel name
@@ -21,6 +27,15 @@ class urlopener(urllib.URLopener):
 
 
 def api_url(username,password,count=0):
+    '''
+    Determines which url to use for the API request
+    and returns it. If count is 0 (default) then we
+    retrieve all of the users bookmarks with
+    "https://user:password@api.del.icio.us/v1/posts/all",
+    or else we retrieve only $count number of bookmarks
+    with
+    "https://user:password@api.del.icio.us/v1/posts/recent?count=$count"
+    '''
     if not count:
         return "https://%s:%s@api.del.icio.us/v1/posts/all"%(
             username,password)
@@ -29,6 +44,9 @@ def api_url(username,password,count=0):
 
 
 def get_xml(url):
+    '''
+    Makes the API request and returns the raw xml recieved
+    '''
     global del_opener
     try:
         xml_sock = del_opener.open(url)
@@ -38,7 +56,7 @@ def get_xml(url):
         return xml
 
 
-def sgroup(regex,string):
+def sgroup(regex,string):#surely there's a better way to do this??
     '''
     Returns only the term matched by a regex.
     '''
@@ -54,17 +72,32 @@ def parse_attr(attr_name,string):
 
 def api_time_to_epoch(time):
     #2009-06-19T17:28:55Z
-    parsed = (time[0:4],
-              time[5:6],
-              time[8:10],
-              time[-9:-7],
-              time[-6:-4],
-              time[-3:-1],
+    parsed = (time[0:4],  # year (2009)
+              time[5:6],  # month(06)
+              time[8:10], # day  (19)
+              time[-9:-7],# hour (17)
+              time[-6:-4],# mins (28)
+              time[-3:-1],# secs (55)
               0,0,-1)
     return int(mktime(tuple(int(i) for i in parsed)))
 
 
 def parse_posts(xml):
+    '''
+    Takes the raw xml data returned by the API request
+    in `get_xml()` and sorts the data into a dictionary
+    of the form:
+    {
+        title :
+            url,
+            time_posted,
+            description,
+            (tag,tag,tags...)
+            ,
+        title :
+            etc...
+    }
+    '''
     post  = re.compile("<post .*?>\\n")
     href  = re.compile("href=\".*?\"")
     title = re.compile("description=\".*?\"")
@@ -77,10 +110,10 @@ def parse_posts(xml):
     #todo: tidy this up
     for p in post.findall(xml):
         parsed[parse_attr("description",sgroup(title,p))]=(
-            parse_attr("href", sgroup( href,p)),
-            api_time_to_epoch(parse_attr("time", sgroup( time,p))),
-            parse_attr("extended", sgroup( desc,p)),
-            tuple(parse_attr("tag", sgroup( tags,p)).split(' '))
+                              parse_attr("href", sgroup( href,p)),
+           api_time_to_epoch( parse_attr("time", sgroup( time,p)) ),
+                              parse_attr("extended", sgroup( desc,p)),
+                       tuple( parse_attr("tag", sgroup( tags,p)).split(' ') )
         )
     return parsed
 
@@ -136,7 +169,7 @@ Options: encoding = utf8, version=3
     URL=%s
     CREATED=%s
     DESCRIPTION=%s\n"""% (title,              # <-     
-                         feed_dict[title] [0],# ur     
+                         feed_dict[title] [0],# url    
                          feed_dict[title] [1],# pubDate
                          feed_dict[title] [2])# description
                     )
@@ -192,7 +225,7 @@ def convert(parsed_xml):
         convert_xbel(parsed_xml)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":#todo:tidy this up
     from optparse import OptionParser,OptionValueError
     import getpass
     del_opener = urlopener()
@@ -221,7 +254,6 @@ if __name__ == "__main__":
     oparser.add_option("-x","--xbel",dest="XBEL",
                        action="store_true",default=True,
                        help="Whether to use the PXSIG's XBEL format (default)")
-    #todo: add a resolve case for filetypes
 
     (options, args) = oparser.parse_args()
 
@@ -237,15 +269,13 @@ if __name__ == "__main__":
     xml = get_xml(url)
 
     if options.FILE !=sys.stdout:
-        target = file(options.FILE,"w")
-        close=1#whether or not to close the file before exit
+        try:
+            target = file(options.FILE,"w")
+            convert(parse_posts(xml))
+        finally:
+            target.close()
+            exit(0)
     else:
         target=sys.stdout
-        close=0
-
-    if close:
-        try:convert(parse_posts(xml))
-        finally:target.close()
-    else:
         convert(parse_posts(xml))
-    exit(0)
+        exit(0)
