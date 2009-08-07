@@ -229,13 +229,10 @@ if __name__ == "__main__":#todo:tidy this up
     from optparse import OptionParser,OptionValueError
     import getpass
     del_opener = urlopener()
-    Usage = "usage: delectus -u USERNAME [options]"
+    Usage = "usage: delectus USERNAME [options]"
 
     oparser = OptionParser(usage=Usage)
-
-    oparser.add_option("-u","--user",dest="USER",# should be a positional arg
-                       action="store",type="str",
-                       help="Delicious username")
+    
     oparser.add_option("-p","--pass",dest="PASS",#<- for use in scripts
                        action="store",type="str")
     oparser.add_option("-f","--file",dest="FILE",default=sys.stdout,
@@ -257,11 +254,12 @@ if __name__ == "__main__":#todo:tidy this up
 
     (options, args) = oparser.parse_args()
 
-    if not options.USER:
+    
+    if len(sys.argv) < 2:
         print Usage
         exit(1)
     else:
-        username=options.USER
+        username=sys.argv[1]
     if not options.PASS:
         password=getpass.getpass()
 
