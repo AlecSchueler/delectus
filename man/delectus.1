@@ -1,49 +1,33 @@
-.TH DELECTUS 1 "23 July 2009"
+.TH DELECTUS 1 "07 August 2009"
 .SH NAME
 delectus \- Backup delicious.com bookmarks
 .SH SYNOPSIS
-\fBdelectus\fP -u USERNAME [-c AMOUNT] [-f FILE] [-a|-h|-x]
+\fBdelectus\fP USERNAME [-c AMOUNT] [-f FILE] [-a|-h|-x]
 .SH DESCRIPTION
 Make a backup of USERNAME's last COUNT delicious.com
 bookmarks and optionally save to FILE.
 .SS OPTIONS
 .TP
-\fB-u --user \fIUSERNAME\fR
-Delicious username to use
-.TP
 \fB-c --count \fIAMOUNT\fR
-Number of bookmarks to retrieve,
-given as a digit. If set to 0 
-then all bookmarks are used 
-(default).
+Number of bookmarks to retrieve, given as a digit. If set to 0 then all
+bookmarks are used (default).
 .TP
 \fB-f --file \fIFILE\fR
-File to write to. If not given
-then the output is written to
-stdout.
+File to write to. If not given then the output is written to stdout.
 .TP
 \fB-a --adr\fP
-Output backup as an Opera ADR
-file. Note that this format does
-not support tags.
+Output backup as an Opera ADR file. Note that this format does not support
+tags.
 .TP
 \fB-h --html\fP
-Output backup as a Netscape
-HTML file. Use this if you
-intend to import the backup
-into Firefox or MSIE.
+Output backup as a Netscape HTML file. Most browsers, including Mozilla
+Firefox, are able to import this format.
 .TP
 \fB-x --xbel\fP
-Output the backup as an
-XBEL file (default). Note
-that this format does not
+Output the backup as an XBEL file (default). Note that this format does not
 support tagging.
 .SH BUGS
-If two bookmarks have the same
-title, then only the most recently
-saved will be backed up.
-Currently there is no support for
-private bookmarks, but this is to
-be introduced in the future.
+If two bookmarks have the same title, then only the earliest saved will be
+backed up.
 .SH AUTHOR
-John Hill <johannalecschueler at googlemail dot com>
+Alec Schueler <johannalecschueler at googlemail dot com>
