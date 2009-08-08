@@ -212,6 +212,15 @@ def convert_xbel(feed_dict):
                      )
     target.write("\t</folder>\n</xbel>\n")
 
+def convert_text(feed_dict):
+    '''
+    Iterates through the dictionary created with parse_feed()
+    and outputs the url of each bookmark, seperated by a new-
+    -line.
+    '''
+    global target
+    for title in iter(feed_dict):
+        target.write(feed_dict[title][0])
 
 def convert(parsed_xml):
     global options
@@ -220,6 +229,9 @@ def convert(parsed_xml):
 
     elif options.ADR:
         convert_adr(parsed_xml)
+
+    elif options.TEXT:
+        convert_text(parsed_xml)
 
     elif options.XBEL:
         convert_xbel(parsed_xml)
@@ -235,22 +247,32 @@ if __name__ == "__main__":#todo:tidy this up
     
     oparser.add_option("-p","--pass",dest="PASS",#<- for use in scripts
                        action="store",type="str")
+
     oparser.add_option("-f","--file",dest="FILE",default=sys.stdout,
                        action="store",type="str",
                        help="File to write to. Default is stdout")
+
     oparser.add_option("-c","--count",dest="COUNT",
                        action="store",type="int",default=0,
                        help="""Number of bookmarks to retrieve
                                 0 means all (default)""")
+
+    oparser.add_option("-t","--text",dest="TEXT",
+                       action="store_true",default=False,
+                       help="Whether to use plain text")
+    
     oparser.add_option("-a","--adr",dest="ADR",
                        action="store_true",default=False,
                        help="Whether to use Opera's ADR format")
+
     oparser.add_option("-n","--html",dest="HTM",
                        action="store_true",default=False,
                        help="Whether to use Netscape's HTML format")
+
     oparser.add_option("-x","--xbel",dest="XBEL",
                        action="store_true",default=True,
                        help="Whether to use the PXSIG's XBEL format (default)")
+
 
     (options, args) = oparser.parse_args()
 
