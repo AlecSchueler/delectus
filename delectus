@@ -286,7 +286,12 @@ if __name__ == "__main__":#todo:tidy this up
         password=getpass.getpass()
 
     url = api_url(username,password,options.COUNT)
-    xml = get_xml(url)
+    try:
+        xml = get_xml(url)
+    except UnboundLocalError:
+        print Usage
+        print "Incorrect username or password?\n"
+        exit(1)
 
     if options.FILE !=sys.stdout:
         try:
