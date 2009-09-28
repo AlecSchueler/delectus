@@ -1,4 +1,4 @@
-#!/usr/bi/env python
+#!/usr/bin/env python
 #todo: use a global "usage..." var
 #todo: docstrings
 #todo: retrieve by tag
@@ -304,3 +304,4 @@ if __name__ == "__main__":#todo:tidy this up
         target=sys.stdout
         convert(parse_posts(xml))
         exit(0)
+
