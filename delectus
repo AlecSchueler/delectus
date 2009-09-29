@@ -49,12 +49,12 @@ def get_xml(url):
     '''
     Makes the API request and returns the raw xml recieved
     '''
-    global del_opener
+    del_opener = urlopener()
     try:
-        xml_sock = del_opener.open(url)
-        xml      = xml_sock.read()
+        xml_req = del_opener.open(url)
+        xml     = xml_req.read()
     finally:
-        xml_sock.close()
+        xml_req.close()
         return xml
 
 
@@ -238,7 +238,6 @@ def convert(parsed_xml):
 if __name__ == "__main__":#todo:tidy this up
     from optparse import OptionParser,OptionValueError
     import getpass
-    del_opener = urlopener()
     Usage = "usage: delectus USERNAME [options]"
 
     oparser = OptionParser(usage=Usage)
