@@ -20,7 +20,7 @@ class urlopener(urllib.URLopener):
     try:
         arch = popen("uname -m") # system architecture
         kern = popen("uname -s") # kernel name
-        version = "Delectus/1.0 (%s; %s; N)" %\
+        version = "Delectus/0.5.2 (%s; %s; N)" %\
                   (kern.read().strip("\n"),  arch.read().strip("\n"))
     finally:
         arch.close()
