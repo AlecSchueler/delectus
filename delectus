@@ -80,7 +80,6 @@ def api_time_to_epoch(time):
               time[-6:-4],# mins (28)
               time[-3:-1],# secs (55)
               0,0,-1)
-    print parsed
     return int(mktime(tuple(int(i) for i in parsed)))
 
 
@@ -126,8 +125,7 @@ def convert_html(feed_dict):
         and prints out a netscape-bookmark-file-1 html file using
         the values therein.
     '''
-    global target
-    target.write("""\
+    sys.stdout.write("""\
 <!DOCTYPE NETSCAPE-Bookmark-file-1>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Bookmarks</title>
@@ -139,7 +137,7 @@ def convert_html(feed_dict):
     )
 
     for title in iter(feed_dict):
-        target.write("""
+        sys.stdout.write("""
     <dt>
         <a href="%s" last_visit="" add_date="%s" tags="%s">%s</a>
     <dd>%s\n"""%(feed_dict[title] [0], # url        
@@ -156,8 +154,7 @@ def convert_adr(feed_dict):
         and prints out an Opera ADR bookmark file, version 3, using
         the values therein.
     '''
-    global target
-    target.write("""\
+    sys.stdout.write("""\
 Opera Hotlist version 2.0
 Options: encoding = utf8, version=3
 
@@ -165,7 +162,7 @@ Options: encoding = utf8, version=3
     NAME=Delicious Bookmarks""")
 
     for title in iter(feed_dict):
-        target.write("""
+        sys.stdout.write("""
 #URL
     NAME=%s
     URL=%s
@@ -184,8 +181,7 @@ def convert_xbel(feed_dict):
         the Python XML Special Interest Group, using the values
         therein.
     '''
-    global target
-    target.write("""\
+    sys.stdout.write("""\
 <?xml version="1.0"?>
 <!DOCTYPE xbel
   PUBLIC "+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML"
@@ -200,7 +196,7 @@ def convert_xbel(feed_dict):
         <title>Delicious Bookmarks</title>""")
 
     for title in iter(feed_dict):
-        target.write("""
+        sys.stdout.write("""
             <bookmark href="%s">
                 <title>%s</title>
                 <info>Tags: %s</info>
@@ -212,7 +208,7 @@ def convert_xbel(feed_dict):
                      ",".join(feed_dict[title][3]),
                               feed_dict[title][2])
                      )
-    target.write("\t</folder>\n</xbel>\n")
+    sys.stdout.write("\t</folder>\n</xbel>\n")
 
 def convert_text(feed_dict):
     '''
@@ -220,9 +216,8 @@ def convert_text(feed_dict):
     and outputs the url of each bookmark, seperated by a new-
     -line.
     '''
-    global target
     for title in iter(feed_dict):
-        target.write(feed_dict[title][0])
+        sys.stdout.write(feed_dict[title][0])
 
 def convert(parsed_xml):
     global options
@@ -249,10 +244,6 @@ if __name__ == "__main__":#todo:tidy this up
     
     oparser.add_option("-p","--pass",dest="PASS",#<- for use in scripts
                        action="store",type="str")
-
-    oparser.add_option("-f","--file",dest="FILE",default=sys.stdout,
-                       action="store",type="str",
-                       help="File to write to. Default is stdout")
 
     oparser.add_option("-c","--count",dest="COUNT",
                        action="store",type="int",default=0,
@@ -295,15 +286,7 @@ if __name__ == "__main__":#todo:tidy this up
         print "Incorrect username or password?\n"
         exit(1)
 
-    if options.FILE !=sys.stdout:
-        try:
-            target = file(options.FILE,"w")
-            convert(parse_posts(xml))
-        finally:
-            target.close()
-            exit(0)
-    else:
-        target=sys.stdout
-        convert(parse_posts(xml))
-        exit(0)
+    target=sys.stdout
+    convert(parse_posts(xml))
+    exit(0)
 
