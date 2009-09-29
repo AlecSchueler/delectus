@@ -10,6 +10,8 @@ from os import popen
 import urllib
 import re
 import sys
+#could also import optparse if handle_opts()
+#and getpass if no password argument passed
 
 class urlopener(urllib.URLopener):
     '''
@@ -66,7 +68,7 @@ def sgroup(regex,string):#surely there's a better way to do this??
 
 
 def parse_attr(attr_name,string):
-    start= len(attr_name)+2 # id est 'attr_nam="'
+    start= len(attr_name)+2 # id est "len(attr_nam=")"
     stop = -1
     
     return string[start:stop]
@@ -220,8 +222,7 @@ def convert_text(feed_dict):
     for title in iter(feed_dict):
         sys.stdout.write(feed_dict[title][0])
 
-def convert(parsed_xml):
-    global options
+def convert(parsed_xml,options):#XXX
     if options.HTM:
         convert_html(parsed_xml)
 
@@ -234,13 +235,10 @@ def convert(parsed_xml):
     elif options.XBEL:
         convert_xbel(parsed_xml)
 
-
-if __name__ == "__main__":#todo:tidy this up
+def handle_opts(Usage, Version):
     from optparse import OptionParser,OptionValueError
-    import getpass
-    Usage = "usage: delectus USERNAME [options]"
 
-    oparser = OptionParser(usage=Usage)
+    oparser = OptionParser(usage=Usage,version=Version)
     
     oparser.add_option("-p","--pass",dest="PASS",#<- for use in scripts
                        action="store",type="str")
@@ -267,26 +265,32 @@ if __name__ == "__main__":#todo:tidy this up
                        help="Whether to use the PXSIG's XBEL format (default)")
 
 
-    (options, args) = oparser.parse_args()
+    return oparser.parse_args()
 
+if __name__ == "__main__":
+    usage = "usage: delectus USERNAME [options]"
+    version = "0.6.2"
+    (options, args) = handle_opts(usage,version)
     
-    if len(sys.argv) < 2:
-        print Usage
+    if len(args) < 1:
+        sys.stderr.write("No username given - exiting\n")
+        sys.stdout.write(usage + "\n")
         exit(1)
     else:
-        username=sys.argv[1]
+        username=args[0]
     if not options.PASS:
+        import getpass
         password=getpass.getpass()
 
     url = api_url(username,password,options.COUNT)
     try:
         xml = get_xml(url)
     except UnboundLocalError:
-        print Usage
-        print "Incorrect username or password?\n"
+        sys.stderr.write("Delicious returned an error\n")
+        sys.stdout.write("Incorrect username or password?\n")
+        sys.stdout.write(usage + "\n")
         exit(1)
 
-    target=sys.stdout
-    convert(parse_posts(xml))
+    convert(parse_posts(xml),options)
     exit(0)
 
