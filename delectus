@@ -3,6 +3,7 @@
 #todo: docstrings
 #todo: retrieve by tag
 #todo: set folder name in opts
+#todo: option to {in,ex}clude bookmarks by regex
 from time import mktime, time
 from os import popen
 import urllib
@@ -73,12 +74,13 @@ def parse_attr(attr_name,string):
 def api_time_to_epoch(time):
     #2009-06-19T17:28:55Z
     parsed = (time[0:4],  # year (2009)
-              time[5:6],  # month(06)
+              time[5:7],  # month(06)
               time[8:10], # day  (19)
               time[-9:-7],# hour (17)
               time[-6:-4],# mins (28)
               time[-3:-1],# secs (55)
               0,0,-1)
+    print parsed
     return int(mktime(tuple(int(i) for i in parsed)))
 
 
