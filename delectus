@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-#todo: use a global "usage..." var
+#todo: use a -g-l-o-b-a-l- "usage..." var (not global)
+#todo: use less (no) global variables generally
 #todo: docstrings
 #todo: retrieve by tag
 #todo: set folder name in opts
