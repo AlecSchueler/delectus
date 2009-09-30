@@ -37,3 +37,6 @@ modules:
 Note that all of the above are contained in the CPython
 standard library.
 
+To install from github, then you'll need git installed
+to clone the repository.
+
