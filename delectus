@@ -280,7 +280,8 @@ if __name__ == "__main__":
         username=args[0]
     if not options.PASS:
         import getpass
-        password=getpass.getpass()
+        password=getpass.getpass(stream=sys.stderr)
+        #stops "Password:" being echoed through pipes etc.
 
     url = api_url(username,password,options.COUNT)
     try:
