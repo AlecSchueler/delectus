@@ -1,0 +1,8 @@
+Installation is simple. Just download the source,
+
+    $ git clone git://github.com/AlecSchueler/Delectus.git
+
+and then install with
+
+    # python setup.py install
+
