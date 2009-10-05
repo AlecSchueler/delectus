@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#todo: use a -g-l-o-b-a-l- "usage..." var (not global)
+#todo: use a "usage..." var
 #todo: use less (no) global variables generally
 #todo: docstrings
 #todo: retrieve by tag
@@ -128,17 +128,6 @@ def convert_html(feed_dict):
         and prints out a netscape-bookmark-file-1 html file using
         the values therein.
     '''
-    sys.stdout.write("""\
-<!DOCTYPE NETSCAPE-Bookmark-file-1>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Bookmarks</title>
-<h1>Bookmarks</h1>
-
-<dt><h3 add_date="%s" last_modified="%s">Delicious Bookmarks</h3>
-""" %(int(time()),
-      int(time()))
-    )
-
     for title in iter(feed_dict):
         sys.stdout.write("""
     <dt>
@@ -157,13 +146,6 @@ def convert_adr(feed_dict):
         and prints out an Opera ADR bookmark file, version 3, using
         the values therein.
     '''
-    sys.stdout.write("""\
-Opera Hotlist version 2.0
-Options: encoding = utf8, version=3
-
-#FOLDER
-    NAME=Delicious Bookmarks""")
-
     for title in iter(feed_dict):
         sys.stdout.write("""
 #URL
@@ -176,15 +158,9 @@ Options: encoding = utf8, version=3
                          feed_dict[title] [2])# description
                     )
 
-
-def convert_xbel(feed_dict):
-    '''
-        Iterates through the dictionary created wit parse_feed(),
-        and prints out an XBEL file, version 1.0, as defined by
-        the Python XML Special Interest Group, using the values
-        therein.
-    '''
-    sys.stdout.write("""\
+def print_head(type):
+    if type == "xbel":
+        sys.stdout.write("""\
 <?xml version="1.0"?>
 <!DOCTYPE xbel
   PUBLIC "+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML"
@@ -197,6 +173,32 @@ def convert_xbel(feed_dict):
 
     <folder folded="yes">
         <title>Delicious Bookmarks</title>""")
+    elif type == "adr":
+        sys.stdout.write("""\
+Opera Hotlist version 2.0
+Options: encoding = utf8, version=3
+
+#FOLDER
+    NAME=Delicious Bookmarks""")
+    elif type == "htm":
+        sys.stdout.write("""\
+<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Bookmarks</title>
+<h1>Bookmarks</h1>
+
+<dt><h3 add_date="%s" last_modified="%s">Delicious Bookmarks</h3>
+""" %(int(time()),
+      int(time()))
+    )
+
+def convert_xbel(feed_dict):
+    '''
+        Iterates through the dictionary created wit parse_feed(),
+        and prints out an XBEL file, version 1.0, as defined by
+        the Python XML Special Interest Group, using the values
+        therein.
+    '''
 
     for title in iter(feed_dict):
         sys.stdout.write("""
@@ -211,7 +213,6 @@ def convert_xbel(feed_dict):
                      ",".join(feed_dict[title][3]),
                               feed_dict[title][2])
                      )
-    sys.stdout.write("\t</folder>\n</xbel>\n")
 
 def convert_text(feed_dict):
     '''
@@ -222,18 +223,24 @@ def convert_text(feed_dict):
     for title in iter(feed_dict):
         sys.stdout.write(feed_dict[title][0])
 
-def convert(parsed_xml,options):#XXX
+def convert(parsed_xml,options):
     if options.HTM:
+        if not options.UPDATE: print_head("htm")
         convert_html(parsed_xml)
 
     elif options.ADR:
+        if not options.UPDATE: print_head("adr")
         convert_adr(parsed_xml)
 
     elif options.TEXT:
         convert_text(parsed_xml)
 
     elif options.XBEL:
+        if not options.UPDATE: print_head("xbel")
         convert_xbel(parsed_xml)
+        if not options.UPDATE: sys.stdout.write("\t</folder>\n</xbel>")
+
+    sys.stdout.write("\n")
 
 def handle_opts(Usage, Version):
     from optparse import OptionParser,OptionValueError
@@ -263,6 +270,11 @@ def handle_opts(Usage, Version):
     oparser.add_option("-x","--xbel",dest="XBEL",
                        action="store_true",default=True,
                        help="Whether to use the PXSIG's XBEL format (default)")
+
+    oparser.add_option("-u","--update",dest="UPDATE",
+                       action="store_true",default=False,
+                       help="Whether or not to print the head of output (i.e."\
+                            " only bookmarks")
 
 
     return oparser.parse_args()

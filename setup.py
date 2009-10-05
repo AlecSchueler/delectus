@@ -6,7 +6,7 @@ from distutils.core import setup
 setup(
     name="delectus",
     version="0.9α",
-    author="Alec Schuele ",
+    author="Alec Schueler",
     author_email="johannalecschueler@googlemail.com",
     url="http://github.com/AlecSchueler/delectus",
     license="LGPL v2",
