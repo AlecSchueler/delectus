@@ -9,7 +9,7 @@ setup(
     author="Alec Schueler",
     author_email="johannalecschueler@googlemail.com",
     url="http://github.com/AlecSchueler/delectus",
-    license="LGPL v2",
+    license="MIT",
     data_files=[('man/man1',['man/delectus.1'])],
     scripts=["delectus"],
     classifiers=[
