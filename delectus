@@ -88,7 +88,7 @@ def api_time_to_epoch(time):
     return int(mktime(tuple(int(i) for i in parsed)))
 
 
-def parse_posts(xml):
+def parse_posts(xml,tag_filter=False):
     '''
     Takes the raw xml data returned by the API request
     in `get_xml()` and sorts the data into a dictionary
@@ -115,12 +115,21 @@ def parse_posts(xml):
 
     #todo: tidy this up
     for p in post.findall(xml):
-        parsed[parse_attr("description",sgroup(title,p))]=(
+        include = True
+        post_tags = tuple( parse_attr("tag", sgroup( tags,p)).split(' ') )
+        if tag_filter != []:
+            include = False
+            for tag in tag_filter:
+                if tag in post_tags:
+                    include=True
+                    break
+        if include:
+            parsed[parse_attr("description",sgroup(title,p))]=(
                               parse_attr("href", sgroup( href,p)),
-           api_time_to_epoch( parse_attr("time", sgroup( time,p)) ),
+               api_time_to_epoch( parse_attr("time", sgroup( time,p)) ),
                               parse_attr("extended", sgroup( desc,p)),
-                       tuple( parse_attr("tag", sgroup( tags,p)).split(' ') )
-        )
+                              post_tags
+            )
     return parsed
 
 
@@ -270,11 +279,12 @@ def handle_opts(Usage, Version):
 
     oparser.add_option("-x","--xbel",dest="XBEL",
                        action="store_true",default=True,
-                       help="Whether to use the PXSIG's XBEL format (default)")
+                       help="Whether to use the PXSIG's XBEL format"
+                            " (default)")
 
     oparser.add_option("-u","--update",dest="UPDATE",
                        action="store_true",default=False,
-                       help="Whether or not to print the head of output (i.e."\
+                       help="Whether or not to print the head of output (i.e."
                             " only bookmarks")
 
 
@@ -291,6 +301,7 @@ if __name__ == "__main__":
         exit(1)
     else:
         username=args[0]
+        tag_filter=[tag.lower() for tag in args[1::]] if len(args)>1 else []
     if not options.PASS:
         import getpass
         password=getpass.getpass(stream=sys.stderr)
@@ -306,6 +317,10 @@ if __name__ == "__main__":
         sys.stdout.write(usage + "\n")
         exit(1)
 
-    convert(parse_posts(xml),options)
+    posts=parse_posts(xml,tag_filter)
+    if posts == {}:
+        sys.stderr.write("No bookmarks found")
+        exit(1)
+    convert(posts,options)
     exit(0)
 
