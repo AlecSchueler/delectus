@@ -16,15 +16,17 @@ import sys
 class urlopener(urllib.URLopener):
     '''
     Sets user-agent string to:
-        "Delectus/$version ($kernel-name; $architecture; N)"
+        "Delectus/$version ($kernel-name; $architecture)"
     e.g.:
-        "Delectus/1.0 (Linux; i686; N)"
+        "Delectus/1.0 (Linux; i686)"
     '''
     try:
         arch = popen("uname -m") # system architecture
         kern = popen("uname -s") # kernel name
-        version = "Delectus/0.5.2 (%s; %s; N)" %\
+        version = "Delectus/0.6.2 (%s; %s)" %\
                   (kern.read().strip("\n"),  arch.read().strip("\n"))
+    except:
+        version = "Declectus/0.6.2"
     finally:
         arch.close()
         kern.close()
@@ -194,12 +196,11 @@ Options: encoding = utf8, version=3
 
 def convert_xbel(feed_dict):
     '''
-        Iterates through the dictionary created wit parse_feed(),
+        Iterates through the dictionary created with parse_feed(),
         and prints out an XBEL file, version 1.0, as defined by
         the Python XML Special Interest Group, using the values
         therein.
     '''
-
     for title in iter(feed_dict):
         sys.stdout.write("""
             <bookmark href="%s">
@@ -293,7 +294,8 @@ if __name__ == "__main__":
     if not options.PASS:
         import getpass
         password=getpass.getpass(stream=sys.stderr)
-        #stops "Password:" being echoed through pipes etc.
+        #sending stream to sterr stops "Password:" being echoed 
+        #through pipes etc.
 
     url = api_url(username,password,options.COUNT)
     try:
@@ -301,7 +303,7 @@ if __name__ == "__main__":
     except UnboundLocalError:
         sys.stderr.write("Delicious returned an error\n")
         sys.stderr.write("Incorrect username or password?\n")
-        sys.stderr.write(usage + "\n")
+        sys.stdout.write(usage + "\n")
         exit(1)
 
     convert(parse_posts(xml),options)
